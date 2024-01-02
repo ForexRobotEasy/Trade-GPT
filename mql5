@@ -1,0 +1,139 @@
+
+// Trade GPT
+// Developer's site: forexroboteasy.com
+// Development: Forex Robot Easy Team
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+#include <MovingAverages\MovingAverages.mqh>
+
+// Define input parameters
+input int searchPeriod = 20; // Period for searching potential trading opportunities
+input double entryCriteria = 0.5; // Threshold for entry conditions
+input double exitCriteria = 0.2; // Threshold for exit conditions
+
+// Define global variables
+int ticket = 0; // Order ticket
+bool isTradeOpen = false; // Flag to indicate if a trade is open
+bool isExitCriteriaMet = false; // Flag to indicate if exit criteria is met
+
+// Create an instance of the Trade class
+CTrade trade;
+
+// Create an instance of the MovingAverages class
+CMovingAverages ma;
+
+// Initialize the trading system
+OnInit()
+{
+    // Set the trade execution mode to instant
+    trade.SetExecutionMode(EXECUTION_INSTANT);
+
+    return(INIT_SUCCEEDED);
+}
+
+// Start trading
+OnTick()
+{
+    // Check if a trade is open
+    if (isTradeOpen)
+    {
+        // Check if exit criteria is met
+        if (isExitCriteriaMet)
+        {
+            // Close the trade
+            trade.Close(ticket);
+            isTradeOpen = false;
+            isExitCriteriaMet = false;
+        }
+    }
+    else
+    {
+        // Search for potential trading opportunities
+        bool searchResult = SearchOpportunities();
+
+        // Check if a potential trading opportunity is found
+        if (searchResult)
+        {
+            // Execute the trade
+            ExecuteTrade();
+        }
+    }
+}
+
+// Search for potential trading opportunities
+bool SearchOpportunities()
+{
+    // Get the SMA values for the specified period
+    double[] smaValues = ma.iSMA(NULL, 0, searchPeriod, 0, MODE_SMA, PRICE_CLOSE);
+
+    // Calculate the GPT value
+    double gptValue = 0;
+    for (int i = 0; i < searchPeriod; i++)
+    {
+        gptValue += smaValues[i];
+    }
+    gptValue /= searchPeriod;
+
+    // Check if the GPT value meets the entry criteria
+    if (gptValue > entryCriteria)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+// Execute the trade
+void ExecuteTrade()
+{
+    // Check the predefined patterns for buy and sell decisions
+    bool shouldBuy = CheckBuyPattern();
+    bool shouldSell = CheckSellPattern();
+
+    // Check if the buy decision is true
+    if (shouldBuy)
+    {
+        // Open a buy trade
+        ticket = trade.Buy();
+        isTradeOpen = true;
+    }
+    // Check if the sell decision is true
+    else if (shouldSell)
+    {
+        // Open a sell trade
+        ticket = trade.Sell();
+        isTradeOpen = true;
+    }
+}
+
+// Check the predefined patterns for buy decisions
+bool CheckBuyPattern()
+{
+    // TODO: Implement the predefined patterns for buy decisions
+    
+    // Return true if the buy pattern conditions are met, otherwise return false
+    return false;
+}
+
+// Check the predefined patterns for sell decisions
+bool CheckSellPattern()
+{
+    // TODO: Implement the predefined patterns for sell decisions
+    
+    // Return true if the sell pattern conditions are met, otherwise return false
+    return false;
+}
+
+// Handle trade events
+OnTrade()
+{
+    // Check if the trade is closed
+    if (trade.PositionCloseTime() > 0)
+    {
+        // Set the exit criteria flag to true
+        isExitCriteriaMet = true;
+    }
+}
